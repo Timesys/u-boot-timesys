@@ -49,6 +49,9 @@ typedef struct bd_info {
 	ulong start;
 	ulong size;
     }			bi_dram[CONFIG_NR_DRAM_BANKS];
+#ifdef CONFIG_VYBRID
+	unsigned short bi_ethspeed;	/* Ethernet speed in Mbps */
+#endif
 } bd_t;
 
 /* For image.h:image_check_target_arch() */

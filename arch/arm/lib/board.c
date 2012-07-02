@@ -234,10 +234,8 @@ init_fnc_t *init_sequence[] = {
 #ifdef CONFIG_OF_CONTROL
 	fdtdec_check_fdt,
 #endif
-	timer_init,		/* initialize timer */
-#ifdef CONFIG_FSL_ESDHC
 	get_clocks,
-#endif
+	timer_init,		/* initialize timer */
 	env_init,		/* initialize environment */
 	init_baudrate,		/* initialze baudrate settings */
 	serial_init,		/* serial communications setup */
@@ -424,6 +422,11 @@ void board_init_f(ulong bootflag)
 	gd->relocaddr = addr;
 	gd->start_addr_sp = addr_sp;
 	gd->reloc_off = addr - _TEXT_BASE;
+
+#ifdef CONFIG_SYS_UBOOT_IN_GPURAM
+	gd->reloc_off += _TEXT_BASE;
+#endif
+
 	debug("relocation Offset is: %08lx\n", gd->reloc_off);
 	memcpy(id, (void *)gd, sizeof(gd_t));
 

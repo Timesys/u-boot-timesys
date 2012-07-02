@@ -304,6 +304,9 @@ endif
 ifeq ($(SOC),mx6)
 LIBS += $(CPUDIR)/imx-common/libimx-common.o
 endif
+ifeq ($(SOC),vybrid)
+LIBS += $(CPUDIR)/vybrid-common/libvybrid-common.o
+endif
 
 ifeq ($(SOC),s5pc1xx)
 LIBS += $(CPUDIR)/s5p-common/libs5p-common.o
