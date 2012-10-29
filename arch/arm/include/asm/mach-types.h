@@ -1109,6 +1109,7 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_VYBRID_VF6XX         4146
 #define MACH_TYPE_VYBRID_VF5XX         4147
 #define MACH_TYPE_VYBRID_VF4XX         4148
+#define MACH_TYPE_PCM052	       4391
 
 #ifdef CONFIG_ARCH_EBSA110
 # ifdef machine_arch_type
@@ -14272,6 +14273,18 @@ extern unsigned int __machine_arch_type;
 # define machine_is_vybrid_vf4xx()	(machine_arch_type == MACH_TYPE_VYBRID_VF4XX)
 #else
 # define machine_is_vybrid_vf4xx()	(0)
+#endif
+
+#ifdef CONFIG_MACH_PCM052
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_PCM052
+# endif
+# define machine_is_pcm052()		(machine_arch_type == MACH_TYPE_PCM052)
+#else
+# define machine_is_pcm052()		(0)
 #endif
 
 /*
