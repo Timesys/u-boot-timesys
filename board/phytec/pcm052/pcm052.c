@@ -421,12 +421,12 @@ int board_mmc_getcd(struct mmc *mmc)
 	__raw_writel(0x005031e3, IOMUXC_PAD_049);	/* dat2 */
 	__raw_writel(0x005031e3, IOMUXC_PAD_050);	/* dat3 */
 #endif
-	__raw_writel(0x005031ef, IOMUXC_PAD_014);	/* clk */
-	__raw_writel(0x005031ef, IOMUXC_PAD_015);	/* cmd */
-	__raw_writel(0x005031ef, IOMUXC_PAD_016);	/* dat0 */
-	__raw_writel(0x005031ef, IOMUXC_PAD_017);	/* dat1 */
-	__raw_writel(0x005031ef, IOMUXC_PAD_018);	/* dat2 */
-	__raw_writel(0x005031ef, IOMUXC_PAD_019);	/* dat3 */
+	__raw_writel(0x005000c3, IOMUXC_PAD_014);	/* clk */
+	__raw_writel(0x005000c3, IOMUXC_PAD_015);	/* cmd */
+	__raw_writel(0x005000c3, IOMUXC_PAD_016);	/* dat0 */
+	__raw_writel(0x005000c3, IOMUXC_PAD_017);	/* dat1 */
+	__raw_writel(0x005000c3, IOMUXC_PAD_018);	/* dat2 */
+	__raw_writel(0x005000c3, IOMUXC_PAD_019);	/* dat3 */
 
 	ret = 1;
 	return ret;
@@ -531,7 +531,7 @@ int board_late_init(void)
 
 int checkboard(void)
 {
-	puts("Board: Vybrid\n");
+	puts("Board: phyCORE-Vybrid\n");
 
 	return 0;
 }
