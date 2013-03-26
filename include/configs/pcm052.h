@@ -109,16 +109,36 @@
 /*
  * NAND FLASH
  */
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+#define MTDIDS_DEFAULT			"nand0=NAND"
+#define MTDPARTS_DEFAULT		"mtdparts=NAND:256k(bootloader)"\
+					",128k(env)"\
+					",4m(kernel)"\
+					",-(rootfs)"
+#define NORMAL_MTDPARTS_DEFAULT		MTDPARTS_DEFAULT
 #ifdef CONFIG_CMD_NAND
 #define CONFIG_MTD_NAND_FSL_NFC_SWECC	1
 #define CONFIG_JFFS2_NAND
 #define CONFIG_NAND_FSL_NFC
 #define CONFIG_SYS_NAND_BASE		0x400E0000
+#define CONFIG_SYS_FLASH_BASE		CONFIG_SYS_NAND_BASE
+#define CONFIG_SYS_MAX_FLASH_SECT	(PHYS_FLASH_SIZE / \
+				CONFIG_SYS_FLASH_SECT_SZ)
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define NAND_MAX_CHIPS			CONFIG_SYS_MAX_NAND_DEVICE
 #define CONFIG_SYS_NAND_SELECT_DEVICE
 #define	CONFIG_SYS_64BIT_VSPRINTF	/* needed for nand_util.c */
 #endif
+
+#define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_NAND_BASE
+#define CONFIG_SYS_MONITOR_LEN		0x40000		/* reserve 256KiB */
+/* Address and size of Redundant Environment Sector */
+#define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
+#define CONFIG_ENV_SIZE_REDUND		CONFIG_ENV_SIZE
+#define CONFIG_SYS_FLASH_SECT_SZ	(128 << 10) /* 128KB */
+#define CONFIG_ENV_SECT_SIZE		0x40000		/* see README - env sector total size */
 
 #define CONFIG_QUAD_SPI
 
@@ -166,24 +186,36 @@
 #define CONFIG_ARP_TIMEOUT		200UL
 
 #define CONFIG_BOOTCOMMAND              "run bootcmd_sd"
-#define CONFIG_EXTRA_ENV_SETTINGS                                       \
-                        "bootfile=uImage-3.0-ts-armv7l\0"               \
-                        "bootargs_base=setenv bootargs rw mem=256M "    \
-                                "console=ttymxc1,115200n8 init=/sbin/init\0" \
-                        "bootargs_sd=setenv bootargs ${bootargs} "      \
-                                "root=/dev/mmcblk0p3 rootwait "         \
-                                "rootfstype=ext2\0"                     \
-                        "bootargs_net=setenv bootargs ${bootargs} "     \
-                                "root=/dev/nfs ip=dhcp "                \
-                                "nfsroot=${serverip}:${nfs_root},v3,tcp\0" \
-                        "bootcmd_sd=run bootargs_base bootargs_sd; "    \
-                                "mmc rescan; fatload mmc 0:2 ${loadaddr}" \
-                                " ${bootfile}; bootm ${loadaddr}\0"	\
-                        "bootcmd_net=run bootargs_base bootargs_net; "  \
-                                "tftpboot ${loadaddr} ${tftploc}${bootfile};" \
-                                "bootm\0"				\
-                        "tftploc=/path/to/tftp/directory/\0"		\
-                        "nfs_root=/path/to/nfs/root\0"
+#define CONFIG_EXTRA_ENV_SETTINGS					\
+	"bootfile=uImage-3.0-ts-armv7l\0"				\
+	"bootargs_base=setenv bootargs rw mem=256M "			\
+		"console=ttymxc1,115200n8 init=/sbin/init\0" 		\
+	"bootargs_sd=setenv bootargs ${bootargs} "			\
+		"root=/dev/mmcblk0p3 rootwait rootfstype=ext2\0"	\
+	"bootargs_net=setenv bootargs ${bootargs} root=/dev/nfs ip=dhcp " \
+		"nfsroot=${serverip}:${nfs_root},v3,tcp\0"		\
+	"bootargs_nand=setenv bootargs ${bootargs} "			\
+		"root=/dev/mtdblock3 rootfstype=jffs2\0"		\
+	"bootargs_mtd=setenv bootargs ${bootargs} ${mtdparts}\0"	\
+	"bootcmd_sd=run bootargs_base bootargs_sd; mmc rescan; "	\
+		"fatload mmc 0:2 ${loadaddr} ${bootfile}; bootm ${loadaddr}\0" \
+	"bootcmd_net=run bootargs_base bootargs_net; "			\
+		"tftpboot ${loadaddr} ${tftploc}${bootfile}; bootm\0"	\
+	"bootcmd_nand='run bootargs_base bootargs_nand bootargs_mtd; "	\
+		"nand read ${loadaddr} 0x00060000 0x400000; "		\
+		"bootm ${loadaddr}\0"					\
+	"tftploc=/path/to/tftp/directory/\0"				\
+	"nfs_root=/path/to/nfs/root\0"					\
+	"mtdparts=" MTDPARTS_DEFAULT "\0"				\
+	"update_kernel_from_sd=mw.b $(loadaddr) 0xff 0x400000; "	\
+		"mmc rescan; fatload mmc 0:2 ${loadaddr} ${bootfile}; "	\
+		"nand erase 0x60000 0x400000; "				\
+		"nand write.i ${loadaddr} 0x60000 0x400000\0"		\
+	"update_rootfs_from_tftp=mw.b ${loadaddr} 0xff 0x800000; "	\
+		"tftp ${loadaddr} ${tftp}${filesys}; "			\
+		"nand erase 0x460000 0x8F20000; "			\
+		"nand write.i ${loadaddr} 0x460000 0x8F20000\0"		\
+	"filesys=rootfs.jffs2\0"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
