@@ -730,8 +730,10 @@ int board_nand_init(struct nand_chip *chip)
 	chip->read_buf = fsl_nfc_read_buf;
 	chip->write_buf = fsl_nfc_write_buf;
 	chip->verify_buf = fsl_nfc_verify_buf;
-	chip->options = NAND_NO_AUTOINCR | NAND_USE_FLASH_BBT |
-		NAND_BUSWIDTH_16 | NAND_CACHEPRG;
+	chip->options = NAND_NO_AUTOINCR | NAND_USE_FLASH_BBT | NAND_CACHEPRG;
+#ifndef CONFIG_MTD_NAND_FSL_8_BIT
+	chip->options |= NAND_BUSWIDTH_16;
+#endif
 
 	chip->select_chip = nfc_select_chip;
 
@@ -788,9 +790,11 @@ int board_nand_init(struct nand_chip *chip)
 			CONFIG_BUFNO_AUTO_INCR_MASK,
 			CONFIG_BUFNO_AUTO_INCR_SHIFT, 0);
 
+#ifndef CONFIG_MTD_NAND_FSL_8_BIT
 	nfc_set_field(mtd, NFC_FLASH_CONFIG,
 			CONFIG_16BIT_MASK,
 			CONFIG_16BIT_SHIFT, 1);
+#endif
 
 	/* SET FAST_FLASH = 1 */
 	nfc_set_field(mtd, NFC_FLASH_CONFIG,
