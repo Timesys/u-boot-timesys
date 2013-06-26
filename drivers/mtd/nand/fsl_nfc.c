@@ -46,7 +46,7 @@
 /*#define CONFIG_MTD_NAND_FSL_NFC_SWECC*/
 
 #ifdef CONFIG_MTD_NAND_FSL_NFC_SWECC
-static int hardware_ecc;
+static int hardware_ecc = 0;
 #else
 static int hardware_ecc = 1;
 #endif
@@ -104,6 +104,162 @@ static struct nand_ecclayout fsl_nfc_ecc45 = {
 		{.offset = 8,
 		.length = 11} }
 };
+/* ************************************************************** */
+//
+// NAND FCB
+//
+typedef struct _NAND_Timing
+{
+        u8 m_u8DataSetup;
+        u8 m_u8DataHold;
+        u8 m_u8AddressSetup;
+        u8 m_u8Reserved;
+        // These are for application use only and not for ROM.
+        u8 m_u8NandTimingState;
+        u8 m_u8REA;
+        u8 m_u8RLOH;
+        u8 m_u8RHOH;
+} NAND_Timing_t;
+
+/* Data structure used to configure toggle-mode NAND DDR NAND */
+typedef struct _TMNANDFCBData
+{
+        u32 m_u32ReadLatency;
+        u32 m_u32PreambleDelay;
+        u32 m_u32CEDelay;
+        u32 m_u32PostambleDelay;
+        u32 m_u32CmdAddPause;
+        u32 m_u32DataPause;
+        u32 m_u32TogglemodeSpeed;     // 0 for 33, 1 for 40 and 2 for 66MHz
+        u32 m_u32BusyTimeout;
+} TMNANDFCBData;
+
+typedef struct _OnfisyncFCBData
+{
+        u32 Onfi_READ_LATENCY;
+        u32 Onfi_CE_DELAY;
+        u32 Onfi_PREAMBLE_DELAY;
+        u32 Onfi_POSTAMBLE_DELAY;
+        u32 Onfi_CMDADD_PAUSE;
+        u32 Onfi_DATA_PAUSE;
+        u32 Onfi_BUSY_TIMEOUT;
+} OnfisyncFCBData;
+
+typedef struct _FCBStruct_t
+{
+        u32 rsvd;                       // 00 First fingerprint in first byte.
+        u32 fingerprint;                // 04 2nd fingerprint at byte 4.
+        u32 version;                    // 08 3rd fingerprint at byte 8.
+        u32 rsvd1;                      // 0C
+        u32 rsvd2;                      // 10
+                                        //NAND_Timing_t m_NANDTiming;
+                                        // 0 rsvd. Optimum timing parameters for
+                                        // Tas, Tds, Tdh in nsec
+        u32 data_pgsz;                  // 14 2048 for 2K pages, 4096 for 4K pages.
+        u32 total_pgsz;                 // 18 2112 for 2K pages, 4314 for 4K pages.
+        u32 secs_perblock;              // 1C # of Pages per block.
+        u32 no_of_nands;                // 20 rsvd. Total Number of NANDs
+        u32 no_of_dies;                 // 24 rsvd. # of separate chips in this NAND.
+        u32 celltype;                   // 28 rsvd. MLC or SLC
+        u32 eccblkNtype;                // 2C rsvd. Type of ECC, can be one of BCH-0-20
+        u32 eccblk0sz;                  // 30 No of bytes for Block0 - BCH
+        u32 eccblkNsz;                  // 34 rsvd. Block size in bytes for all blocks
+                                        // other than Block0 - BCH
+        u32 eccblk0Type;                // 38 0 Ecc level for Block 0 - BCH
+        u32 metadatabytes;              // 3C rsvd. Metadata size - BCH
+        u32 numeccblksperPg;            // 40 rsvd. No of blocks per page for ROM use - BCH
+        u32 eccblkNecclvlsdr;           // 44 rsvd. Type of ECC, can be one of BCH-0-20
+        u32 eccblk0szsdk;               // 48 rsvd. No of bytes for Block0 - BCH
+        u32 eccblkNszsdk;               // 4C rsvd. Block size in bytes for all blocks
+                                        // other than Block0 - BCH
+        u32 eccblk0ecclvlsdk;           // 50 rsvd. Ecc level for Block 0 - BCH
+        u32 numeccblksperpgsdk;         // 54 rsvd. No of blocks per page for SDK use - BCH
+        u32 metadatabytessdk;           // 58 rsvd. Metadata size - BCH
+        u32 erasethreshold;             // 5C rsvd. To set into BCH_MODE register.
+        u32 bootpatch;                  // 60 0 for normal boot and 1 to load patch starting next to FCB.
+        u32 patchsecs;                  // 64 Size of patch in sectors.
+        u32 frm1_startsec;              // 68 Firmware image starts on this sector.
+        u32 frm2_startsec;              // 6C Secondary FW Image starting Sector.
+        u32 secsinfrm1;                 // 70 No of sectors in firmware image.
+        u32 secsinfrm2;                 // 74 No of sector in secondary FW image.
+        u32 DBBTsearchareastartaddr;    // 78 Page address where dbbt search area begins
+        u32 bbmarkerbyte;               // 7C rsvd. Byte in page data that have
+                                        // manufacturer marked bad block marker, this will
+                                        // bw swapped with metadata[0] to complete page data.
+        u32 bbmarkerstartbit;           // 80 rsvd. For BCH ECC sizes other than
+                                        // 8 and 16 the bad block marker does not
+                                        // start at 0th bit of BadBlockMarkerByte.
+                                        // This field is used to get to the start
+                                        // bit of bad block marker byte with in
+                                        // m_u32BadBlockMarkerByte.
+        u32 bbmarkerphyoff;             // 84 FCB value that gives byte offset for
+                                        // bad block marker on physical NAND page.
+        u32 bchtype;                    // 88 rsvd. 0 for BCH20 and 1 for BCH32
+        TMNANDFCBData togglemodedata;   // 8C rsvd. Info needed for configuring clocks
+                                        // and timing parameters for togglemode nand.
+        u32 disbbm;                     // 1--disable bbm, 0 enable bbm
+        u32 bbmarkspareoff;             // rsvd. Mark spare offset
+        u32 onfisyncen;                 // rsvd. ONFI sync enabled
+        u32 onfisyncspeed;              // rsvd. ONFI SYNC speed.
+                                        // 0-20m;1-33m;2-50m;3-66m;4-83m;5-100m;
+        OnfisyncFCBData onfisyncnanddata;  // rsvd ONFI sync NAND data
+        u32 disbbsearch;
+        u32 bbsearchlimit;
+} FCBStruct_t;
+
+#define RESERVED                        (0x00000000)
+#define FCB_FINGERPRINT1                (0x46434220)
+#define FCB_FINGERPRINT2                (0x00000001)
+#define NAND_FCB_BLOCK_OFFSET           0
+#define NAND_DATA_PAGE_SIZE             2048
+#define NAND_TOTAL_PAGE_SIZE            2112
+#define NAND_SECTORS_PER_BLOCK          64
+#define NAND_ECC_BLOCK_TYPE             6
+#define NAND_BAD_BLOCK_MARKER_OFFSET    NAND_DATA_PAGE_SIZE
+#define NAND_DBBT_SEACRH_AREA_START     1
+#define NAND_FIRMWARE1_SECTOR           64
+#define NAND_FIRMWARE2_SECTOR           64
+#define NAND_DISABLE_BB_SEARCH          0
+#define NAND_BAD_BLOCK_SEARCH_LIMIT     8
+
+
+// Bytes per FCB data block
+//#define FCB_SIZE                                              2048
+#define FCB_SIZE                                                1024
+// Size of a parity block in bytes for all 16-bit data blocks present inside one 512 byte FCB block.
+#define NAND_HC_ECC_DATA_BLOCK_SZ               (512)
+// Offset to first copy of FCB in a NAND page
+#define NAND_HC_ECC_PARITY_BLOCK_SZ             (512)
+// make sure this value is divisible by 4 for buffers to be word aligned
+#define NAND_HC_ECC_OFFSET_DATA_COPY    (0)
+// Offset to first copy of Parity block in a NAND page
+#define NAND_HC_ECC_OFFSET_PARITY_COPY  (NAND_HC_ECC_OFFSET_DATA_COPY + NAND_HC_ECC_DATA_BLOCK_SZ)
+
+//
+// NAND FCB
+//
+typedef struct _nand_dbbt_header_
+{
+        u32 rsvd0;
+        u32 fingerprint;
+        u32 version;
+        u32 rsvd1;
+        u32 num_pages;
+} NAND_DBBT_HEADER;
+
+#define NAND_DBBT_ENTERIES                      2
+typedef struct _nand_dbbt_table_
+{
+        u32 rsvd;
+        u32 num_enteries;
+        u32 bad_block_num[NAND_DBBT_ENTERIES];
+} NAND_DBBT_TABLE;
+
+#define DBBT_FINGERPRINT1                       (0x54424244)
+#define DBBT_FINGERPRINT2                       (0x01000000)
+#define DBBT_HEADER_PAGE_COUNT          (4)
+#define NAND_DBBT_NUM_PAGES                     1
+#define NAND_DBBT_BAD_BLOCK_TABLE       1,2
 
 static inline u32 nfc_read(struct mtd_info *mtd, uint reg)
 {
@@ -376,11 +532,6 @@ fsl_nfc_command(struct mtd_info *mtd, unsigned command,
 
 	switch (command) {
 	case NAND_CMD_PAGEPROG:
-		if (!(prv->page%0x40) && !prv->pg_boot)
-			nfc_set_field(mtd, NFC_FLASH_CONFIG,
-				CONFIG_ECC_MODE_MASK,
-				CONFIG_ECC_MODE_SHIFT, ECC_BYPASS);
-
 		fsl_nfc_send_cmd(mtd,
 				PROGRAM_PAGE_CMD_BYTE1,
 				PROGRAM_PAGE_CMD_BYTE2,
@@ -800,94 +951,203 @@ int board_nand_init(struct nand_chip *chip)
 	return 0;
 }
 
-int do_nand_boot_update(cmd_tbl_t *cmdtp, int flag,
-		int argc, char * const argv[])
+void calculate_parity(unsigned char d, unsigned char * p)
 {
-	ulong mem_addr;
-	size_t data_size;
-	int j;
-	struct mtd_info *mtd;
-	u_char *addr;
-	u32 saved_cfg;
-	struct nand_chip *chip;
-	struct fsl_nfc_prv *prv;
-	nand_info_t *nand;
+        unsigned char Bit0  = (d & (1 << 0)) ? 1 : 0;
+        unsigned char Bit1  = (d & (1 << 1)) ? 1 : 0;
+        unsigned char Bit2  = (d & (1 << 2)) ? 1 : 0;
+        unsigned char Bit3  = (d & (1 << 3)) ? 1 : 0;
+        unsigned char Bit4  = (d & (1 << 4)) ? 1 : 0;
+        unsigned char Bit5  = (d & (1 << 5)) ? 1 : 0;
+        unsigned char Bit6  = (d & (1 << 6)) ? 1 : 0;
+        unsigned char Bit7  = (d & (1 << 7)) ? 1 : 0;
 
-	if (nand_curr_device < 0 ||
-		nand_curr_device >= CONFIG_SYS_MAX_NAND_DEVICE ||
-		!nand_info[nand_curr_device].name) {
-		puts("\nno devices available\n");
-		return 1;
+        *p = 0;
+
+        *p |= ((Bit6 ^ Bit5 ^ Bit3 ^ Bit2) << 0);
+        *p |= ((Bit7 ^ Bit5 ^ Bit4 ^ Bit2 ^ Bit1) << 1);
+        *p |= ((Bit7 ^ Bit6 ^ Bit5 ^ Bit1 ^ Bit0) << 2);
+        *p |= ((Bit7 ^ Bit4 ^ Bit3 ^ Bit0) << 3);
+        *p |= ((Bit6 ^ Bit4 ^ Bit3 ^ Bit2 ^ Bit1 ^ Bit0) << 4);
+}
+
+void create_FCB(uint8_t *pfcb, ulong fw1_addr, ulong fw2_addr)
+{
+    FCBStruct_t fcb;
+	int fw1_page;
+	int fw2_page;
+	unsigned char *parity;
+	unsigned char *plFCB;
+	int i;
+
+	if (fw1_addr % NAND_DATA_PAGE_SIZE == 0) {
+		fw1_page = fw1_addr / NAND_DATA_PAGE_SIZE;
+	} else {
+		printf ("Firmware address not valid, must be aligned to a %d boundry./n",
+				NAND_DATA_PAGE_SIZE);
+		return;
 	}
 
 
-	mtd =  &nand_info[nand_curr_device];
-	nand = &nand_info[nand_curr_device];
-	chip = mtd->priv;
-	prv = chip->priv;
+	/* Initialize FCB to zero */
+	memset(&fcb, 0x0, sizeof(FCBStruct_t));
 
-	prv->pg_boot = 1;
+	fcb.fingerprint             = FCB_FINGERPRINT1;
+	fcb.version                 = FCB_FINGERPRINT2;
+	fcb.data_pgsz               = NAND_DATA_PAGE_SIZE;
+	fcb.total_pgsz              = NAND_TOTAL_PAGE_SIZE;
+	fcb.secs_perblock           = NAND_SECTORS_PER_BLOCK;
+	fcb.eccblk0Type             = ECC_45_BYTE;
+	fcb.frm1_startsec           = fw1_page;
+	fcb.frm2_startsec           = fw1_page;
+	fcb.DBBTsearchareastartaddr = 130816;                    // 0x78 page address where dbbt search begins
+	fcb.bbmarkerphyoff          = 2048;                      // 0x84 bad block marker offset
+	fcb.disbbm                  = 1;                         // 0xAC, NAND_DISABLE_BBM
+	fcb.disbbsearch             = NAND_DISABLE_BB_SEARCH;    // 0xD8, disaled BadBlock search
+	fcb.bbsearchlimit           = NAND_BAD_BLOCK_SEARCH_LIMIT;
+	parity = pfcb + NAND_HC_ECC_DATA_BLOCK_SZ;
+	plFCB = pfcb;
 
-	if (argc < 3) {
-		cmd_usage(cmdtp);
-		return -1;
+	memset(pfcb, 0xff, FCB_SIZE);
+	memcpy(pfcb, &fcb, sizeof(fcb));
+
+	for (i = 0; i < NAND_HC_ECC_DATA_BLOCK_SZ; i++) {
+		calculate_parity(plFCB[i], &parity[i]);
 	}
+}
 
-	strict_strtoul(argv[1], 16, &mem_addr);
-	strict_strtoul(argv[2], 16, &data_size);
+int Create_DBBT(uint8_t *pdbbt_tbl, uint8_t *pdbbt_hdr)
+{
+	NAND_DBBT_HEADER dbbt_header = {
+		RESERVED,                   //      0x00
+		DBBT_FINGERPRINT1,          //      0x04
+		DBBT_FINGERPRINT2,          //      0x08
+		RESERVED,                   //      0x0C
+		NAND_DBBT_NUM_PAGES,        //      0x10
+	};
+	uint32_t dbbt_table[] = {
+		RESERVED,                   //      0x00
+		NAND_DBBT_ENTERIES,         //      0x04
+		NAND_DBBT_BAD_BLOCK_TABLE   //      0x08
+	};
 
-	saved_cfg = nfc_read(mtd, NFC_FLASH_CONFIG);
-
-	nfc_write(mtd, NFC_FLASH_CONFIG, 0x000ea671);
-	memcpy((void *)CONFIG_SYS_NAND_BASE, (unsigned char *)mem_addr, 0xf80);
-
-	nfc_write(mtd, NFC_FLASH_CMD1, 0x10000000);
-	nfc_write(mtd, NFC_FLASH_CONFIG, 0x000ea631);
-	nfc_write(mtd, NFC_SECTOR_SIZE, 0x0000420);
-	nfc_write(mtd, NFC_FLASH_COMMAND_REPEAT, 0x0);
-
-	/*program the first 4 pages.*/
-	nfc_select_chip(mtd, 0);
-	for (j = 0; j < 4; j++) {
-		nfc_write(mtd, NFC_ROW_ADDR, 0x11000000 + j);
-		nfc_write(mtd, NFC_COL_ADDR, 0x00);
-
-		nfc_write(mtd, NFC_FLASH_CMD2, 0x807e0000);
-		fsl_nfc_done(mtd);
-		nfc_write(mtd, NFC_FLASH_CMD2, 0x8001c000 + j*2);
-		fsl_nfc_done(mtd);
-
-	}
-	nfc_select_chip(mtd, -1);
-
-	/*program the other part*/
-
-	fsl_nfc_clear(mtd);
-
-	nfc_write(mtd, NFC_FLASH_CONFIG, 0x000e0681);
-
-	nfc_write(mtd, NFC_SECTOR_SIZE, (PAGE_2K | PAGE_64) + 1);
-
-	nfc_write(mtd, NFC_FLASH_CMD2, 0x007ee000);
-	nfc_write(mtd, NFC_ROW_ADDR, 0x11000000);
-
-	addr = (u_char *)mem_addr + 0xf80;
-
-	data_size = ((data_size - 0xf80) + 0x800) & ~(0x800 - 1) ;
-
-
-	if (nand_write_skip_bad(nand, 0x2000, &data_size, addr, 0)) {
-		printf("write nand boot error!\n");
-		return -1;
-	}
-
-	prv->pg_boot = 0;
-
-	nfc_write(mtd, NFC_FLASH_CONFIG, saved_cfg);
+	memset(pdbbt_hdr, 0xFF, sizeof(dbbt_header));
+	memcpy(pdbbt_hdr, &dbbt_header, sizeof(dbbt_header));
+	memset(pdbbt_tbl, 0xFF, sizeof(dbbt_table));
+	memcpy(pdbbt_tbl, &dbbt_table, sizeof(dbbt_table));
 
 	return 0;
 }
 
+
+int do_nand_boot_update(cmd_tbl_t *cmdtp, int flag,
+                        int argc, char * const argv[])
+{
+    struct mtd_info *mtd;
+	struct nand_chip *chip;
+	struct fsl_nfc_prv *prv;
+    nand_info_t *nand;
+
+    ulong mem_addr;
+    size_t data_size;
+	ulong flash_addr;
+    u32 saved_cfg;
+    void *temp_buf;
+    u32 rwsize, offset;
+    FCBStruct_t *pfcb;
+    uint8_t fcb[FCB_SIZE];
+    uint8_t dbbt_tbl[sizeof(NAND_DBBT_TABLE)];
+    uint8_t dbbt_hdr[sizeof(NAND_DBBT_HEADER)];
+
+    /* Parse the parameters */
+    if (argc < 4) {
+        cmd_usage(cmdtp);
+        return -1;
+    }
+    strict_strtoul(argv[1], 16, (long unsigned int *)&mem_addr);
+    strict_strtoul(argv[2], 10, (long unsigned int *)&data_size);
+    strict_strtoul(argv[3], 16, (long unsigned int *)&flash_addr);
+
+    /* Check for a valid current NAND device */
+    if (nand_curr_device < 0 ||
+        nand_curr_device >= CONFIG_SYS_MAX_NAND_DEVICE ||
+        !nand_info[nand_curr_device].name) {
+        printf("\nNo NAND devices available\n");
+        return 1;
+    }
+
+    /* Setup pointers and chip select */
+    mtd =  &nand_info[nand_curr_device];
+    nand = &nand_info[nand_curr_device];
+    chip = mtd->priv;
+    prv = chip->priv;
+
+    nfc_select_chip(mtd, 0);
+
+    /* Save the current NFC configuration register */
+    saved_cfg = nfc_read(mtd, NFC_FLASH_CONFIG);
+
+    printf("Flashing image @ 0x%x; size %d to 0x%x\n",
+           mem_addr, data_size, flash_addr);
+
+    /* Create the FCB & DBBT */
+    create_FCB(&fcb[0], flash_addr, 0);
+#if 0
+    Create_DBBT(&dbbt_tbl[0], &dbbt_hdr[0]);
+#endif
+
+    pfcb = (FCBStruct_t *)&fcb[0];
+
+    /* Allocate a staging buffer for data to be written */
+    temp_buf = malloc(0x800);
+
+    /* The FCB must be written with ECC in bypass mode */
+    prv->pg_boot = 1;
+
+    /* memset the staging buffer to 0xFF, and copy the FCB */
+    memset(temp_buf, 0xFF, 0x800);
+    memcpy(temp_buf, fcb, FCB_SIZE);
+    rwsize = 0x800;
+    offset = 0;
+    nand_write_skip_bad(mtd, offset, &rwsize, (u_char *)temp_buf, 0);
+
+    /* The BBT and image are written with HW ECC enabled. */
+    prv->pg_boot = 0;
+#if 0
+    /* Write the BBT to the first page*/
+    if (pfcb->DBBTsearchareastartaddr) {
+        /* Write the DBBT Header */
+        /* memset the staging buffer to 0xFF, then copy the header */
+        memset(temp_buf, 0xFF, 0x800);
+        memcpy(temp_buf, dbbt_hdr, sizeof(dbbt_hdr));
+        rwsize = 0x800;
+        offset = 0x800;
+        nand_write_skip_bad(mtd, offset, &rwsize, (u_char *)temp_buf, 0);
+
+        /* Write DBBT table */
+        /* memset first page as 0xFF then copy the table */
+        memset(temp_buf, 0xFF, 0x800);
+        memcpy(temp_buf, dbbt_tbl, sizeof(dbbt_tbl));
+        rwsize = 0x800;
+        offset = 0x2800;
+        nand_write_skip_bad(mtd, 0x2800, &rwsize, (u_char *)temp_buf, 0);
+    }
+#endif
+
+    /* Write the image to flash */
+    nand_write_skip_bad(mtd, flash_addr, &data_size, (u_char *)mem_addr, 0);
+
+    /* Done - clean up */
+    nfc_select_chip(mtd, -1);
+    fsl_nfc_clear(mtd);
+    free(temp_buf);
+
+    /* Restore the original NFC configuration register value */
+    nfc_write(mtd, NFC_FLASH_CONFIG, saved_cfg);
+
+    return 0;
+}
+
 U_BOOT_CMD(nb_update, 4, 1, do_nand_boot_update,
-	   "Nand boot update  program",
-	   "mem_addr size");
+           "Nand boot update ",
+           "nb_update <image addr> <size> <dest flash addr>");
