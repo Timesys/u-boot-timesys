@@ -161,7 +161,14 @@
 
 #	define CONFIG_ETHADDR		00:e0:0c:bc:e5:60
 #	define CONFIG_ETH1ADDR		00:e0:0c:bc:e5:61
+
+#	undef CONFIG_PCM052_FEC1	// if defined, use ETH1 instead of ETH0
+#	ifdef CONFIG_PCM052_FEC1
+#	define CONFIG_ETHPRIME		"FEC1"
+#	else
 #	define CONFIG_ETHPRIME		"FEC0"
+#	endif
+
 #	define CONFIG_IPADDR		192.168.3.10
 #	define CONFIG_NETMASK		255.255.255.0
 #	define CONFIG_SERVERIP		192.168.3.11
@@ -180,7 +187,6 @@
 #endif
 
 #define CONFIG_BOOTDELAY		3
-#define CONFIG_ETHPRIME			"FEC0"
 #define CONFIG_LOADADDR			0x80010000	/* loadaddr env var */
 #define CONFIG_ARP_TIMEOUT		200UL
 

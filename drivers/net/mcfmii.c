@@ -52,6 +52,12 @@ DECLARE_GLOBAL_DATA_PTR;
 #define mk_mii_write(ADDR, REG, VAL)	(0x50020000 | ((ADDR << 23) | \
 					 (REG & 0x1f) << 18) | (VAL & 0xffff))
 
+/* Definitions for KSZ8051 PHY - 50 MHz mode */
+#define KSZ8051_PHY_BASIC_CTRL	0x00
+#define KSZ8051_PHY_CTRL2	0x1F
+#define KSZ8051_RESET		(1 << 15)
+#define KSZ8051_50MHZ_CLK_MODE	(1 << 7)
+
 #ifndef CONFIG_SYS_UNSPEC_PHYID
 #	define CONFIG_SYS_UNSPEC_PHYID		0
 #endif
@@ -82,6 +88,7 @@ phy_info_t phyinfo[] = {
 	{0x001378e0, "LXT971"},		/* LXT971 and 972 */
 	{0x00221619, "KS8721BL"},	/* Micrel KS8721BL/SL */
 	{0x00221512, "KSZ8041NL"},	/* Micrel KSZ8041NL */
+	{0x00221550, "KSZ8051"},        /* Micrel KSZ8051 */
 	{0x20005CE1, "N83640"},		/* National 83640 */
 	{0x20005C90, "N83848"},		/* National 83848 */
 	{0x20005CA2, "N83849"},		/* National 83849 */
@@ -231,6 +238,7 @@ void __mii_init(void)
 	int miispd = 0, i = 0;
 	u16 status = 0;
 	u16 linkgood = 0;
+	u16 regval = 0;
 
 	/* retrieve from register structure */
 	dev = eth_get_dev();
@@ -253,6 +261,24 @@ void __mii_init(void)
 	fecp->mscr = miispd << 1;
 
 	info->phy_addr = mii_discover_phy(dev);
+
+#if (defined(CONFIG_MACH_PCM052) && defined(CONFIG_PCM052_FEC1))
+	// KSZ8051 in 50 MHz mode
+	// Check that the device was properly reset
+	if(0 == strcmp(dev->name, "FEC1")) {
+		regval = 0;
+		if (0 == miiphy_read(dev->name, info->phy_addr, KSZ8051_PHY_BASIC_CTRL, &regval)) {
+			// reset the PHY
+			regval |= KSZ8051_RESET;
+			miiphy_write(dev->name, info->phy_addr, KSZ8051_PHY_BASIC_CTRL, regval);
+		}
+		// Set FEC1 for 50 MHz mode
+		regval = 0;
+		miiphy_read(dev->name, info->phy_addr, KSZ8051_PHY_CTRL2, &regval);
+		regval |= KSZ8051_50MHZ_CLK_MODE;
+		miiphy_write(dev->name, info->phy_addr, KSZ8051_PHY_CTRL2, regval);
+	}
+#endif
 
 	while (i < MCFFEC_TOUT_LOOP) {
 		status = 0;
