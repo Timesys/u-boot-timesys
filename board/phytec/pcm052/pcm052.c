@@ -316,12 +316,10 @@ int dram_init(void)
 
 void setup_iomux_uart(void)
 {
-	__raw_writel(0x002011a2, IOMUXC_PAD_026);
-	__raw_writel(0x002011a1, IOMUXC_PAD_027);
-	__raw_writel(0x002011a2, IOMUXC_PAD_028);
-	__raw_writel(0x002011a1, IOMUXC_PAD_029);
-	__raw_writel(0x001011a2, IOMUXC_PAD_032);
-	__raw_writel(0x001011a1, IOMUXC_PAD_033);
+	__raw_writel(0x002011a2, IOMUXC_PAD_026); // SCI1_TX
+	__raw_writel(0x002011a1, IOMUXC_PAD_027); // SCI1_RX
+	__raw_writel(0x007011a2, IOMUXC_PAD_028); // SCI2_TX
+	__raw_writel(0x007011a1, IOMUXC_PAD_029); // SCI2_RX
 }
 
 #if defined(CONFIG_CMD_NET)
