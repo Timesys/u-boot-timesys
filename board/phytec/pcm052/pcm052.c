@@ -46,8 +46,9 @@ struct fsl_esdhc_cfg esdhc_cfg[2] = {
 
 void setup_iomux_ddr(void)
 {
-#define DDR_IOMUX	0x00000180
-#define DDR_IOMUX1	0x00010180
+#define DDR_IOMUX	0x000001C0
+#define DDR_IOMUX1	0x000101C0
+
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_A15);
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_A14);
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_A13);
@@ -95,15 +96,19 @@ void setup_iomux_ddr(void)
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_WE);
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_ODT1);
 	__raw_writel(DDR_IOMUX, IOMUXC_DDR_ODT0);
+
+	__raw_writel(DDR_IOMUX, IOMUXC_DDR_DDRBYTE1);
+	__raw_writel(DDR_IOMUX, IOMUXC_DDR_DDRBYTE0);
 }
 
 void ddr_phy_init(void)
 {
-#define PHY_DQ_TIMING		0x00002613
+#define PHY_DQ_TIMING		0x00002213
 #define PHY_DQS_TIMING		0x00002615
-#define PHY_CTRL		0x01210080
+#define PHY_CTRL		0x00290000
 #define PHY_MASTER_CTRL		0x0001012a
-#define PHY_SLAVE_CTRL		0x00012020
+#define PHY_SLAVE_CTRL		0x00002c00
+#define PHY_SLAVE_CTRL2		0x00010020
 
 	/* phy_dq_timing_reg freq set 0 */
 	__raw_writel(PHY_DQ_TIMING, DDR_PHY000);
@@ -121,21 +126,21 @@ void ddr_phy_init(void)
 	__raw_writel(PHY_CTRL, DDR_PHY002);	/* read delay bit21:19 */
 	__raw_writel(PHY_CTRL, DDR_PHY018);	/* phase_detect_sel bit18:16 */
 	__raw_writel(PHY_CTRL, DDR_PHY034);	/* bit lpbk_ctrl bit12 */
-	__raw_writel(PHY_CTRL, DDR_PHY050);
+//	__raw_writel(PHY_CTRL, DDR_PHY050);
 
 	/* phy_dll_master_ctrl_reg freq set 0 */
 	__raw_writel(PHY_MASTER_CTRL, DDR_PHY003);
 	__raw_writel(PHY_MASTER_CTRL, DDR_PHY019);
 	__raw_writel(PHY_MASTER_CTRL, DDR_PHY035);
-	__raw_writel(PHY_MASTER_CTRL, DDR_PHY051);
 
 	/* phy_dll_slave_ctrl_reg freq set 0 */
 	__raw_writel(PHY_SLAVE_CTRL, DDR_PHY004);
 	__raw_writel(PHY_SLAVE_CTRL, DDR_PHY020);
 	__raw_writel(PHY_SLAVE_CTRL, DDR_PHY036);
-	__raw_writel(PHY_SLAVE_CTRL, DDR_PHY052);
 
-	__raw_writel(0x00001105, DDR_PHY050);
+	__raw_writel(PHY_SLAVE_CTRL2, DDR_PHY052);
+
+	__raw_writel(0x00001100, DDR_PHY050);
 }
 
 unsigned long ddr_ctrl_init(void)
@@ -143,33 +148,33 @@ unsigned long ddr_ctrl_init(void)
 	int dram_size, rows, cols, banks, port;
 
 	__raw_writel(0x00000600, DDR_CR000);	/* LPDDR2 or DDR3 */
-	__raw_writel(0x00000020, DDR_CR002);	/* TINIT */
-	__raw_writel(0x0000007c, DDR_CR010);	/* reset during power on */
-						/* warm boot - 200ns */
-	__raw_writel(0x00013880, DDR_CR011);	/* 500us - 10ns */
+	__raw_writel(0x00000005, DDR_CR002);	/* TINIT */
+	__raw_writel(0x00013880, DDR_CR010);	/* reset during power on */
+						/* warm boot - 200us */
+	__raw_writel(0x00030D40, DDR_CR011);	/* 500us - 10ns */
 	__raw_writel(0x0000050c, DDR_CR012);	/* CASLAT_LIN, WRLAT */
-	__raw_writel(0x15040404, DDR_CR013);	/* trc, trrd, tccd
+	__raw_writel(0x06040404, DDR_CR013);	/* trc, trrd, tccd
 						   tbst_int_interval */
-	__raw_writel(0x1406040F, DDR_CR014);	/* tfaw, tfp, twtr, tras_min */
+	__raw_writel(0x1206040F, DDR_CR014);	/* tfaw, trp, twtr, tras_min */
 	__raw_writel(0x04040000, DDR_CR016);	/* tmrd, trtp */
-	__raw_writel(0x006DB00C, DDR_CR017);	/* tras_max, tmod */
+	__raw_writel(0x0036D80C, DDR_CR017);	/* tras_max, tmod */
 	__raw_writel(0x00000403, DDR_CR018);	/* tckesr, tcke */
 
-	__raw_writel(0x01000000, DDR_CR020);	/* ap, writrp */
-	__raw_writel(0x06060101, DDR_CR021);	/* trcd_int, tras_lockout
+	__raw_writel(0x01000403, DDR_CR020);	/* ap, writrp */
+	__raw_writel(0x00060101, DDR_CR021);	/* trcd_int, tras_lockout
 						   ccAP */
-	__raw_writel(0x000B0000, DDR_CR022);	/* tdal */
+	__raw_writel(0x000A0000, DDR_CR022);	/* tdal */
 	__raw_writel(0x03000200, DDR_CR023);	/* bstlen, tmrr, tdll */
 	__raw_writel(0x00000006, DDR_CR024);	/* addr_mirror, reg_dimm
 						   trp_ab */
 	__raw_writel(0x00010000, DDR_CR025);	/* tref_enable, auto_refresh
 						   arefresh */
-	__raw_writel(0x0C28002C, DDR_CR026);	/* tref, trfc */
+	__raw_writel(0x06060040, DDR_CR026);	/* tref, trfc */
 	__raw_writel(0x00000005, DDR_CR028);	/* tref_interval fixed at 5 */
 	__raw_writel(0x00000003, DDR_CR029);	/* tpdex */
 
 	__raw_writel(0x0000000A, DDR_CR030);	/* txpdll */
-	__raw_writel(0x00440200, DDR_CR031);	/* txsnr, txsr */
+	__raw_writel(0x004401FA, DDR_CR031);	/* txsnr, txsr */
 	__raw_writel(0x00010000, DDR_CR033);	/* cke_dly, en_quick_srefresh
 						 * srefresh_exit_no_refresh,
 						 * pwr, srefresh_exit
@@ -197,15 +202,16 @@ unsigned long ddr_ctrl_init(void)
 						 */
 	__raw_writel(0x00000000, DDR_CR049);	/* mr2 */
 	__raw_writel(0x00000000, DDR_CR051);	/* mr3 & mrsingle_data_0 */
+	__raw_writel(0x00000000, DDR_CR052);	/* mr17 & mr16 */
 
 	__raw_writel(0x00000000, DDR_CR057);	/* ctrl_raw */
+	__raw_writel(0x00000000, DDR_CR058);
 
 	/* ECC */
-	/*__raw_writel(0x00000000, DDR_CR058);*/
 
 	/* ZQ stuff */
 	__raw_writel(0x01000200, DDR_CR066);	/* zqcl, zqinit */
-	__raw_writel(0x02000040, DDR_CR067);	/* zqcs */
+	__raw_writel(0x00000040, DDR_CR067);	/* zqcs */
 	__raw_writel(0x00000200, DDR_CR069);	/* zq_on_sref_exit, qz_req */
 
 	__raw_writel(0x00000040, DDR_CR070);	/* ref_per_zq */
@@ -231,8 +237,6 @@ unsigned long ddr_ctrl_init(void)
 						 * ctrlupd_req
 						 * ctrller busy
 						 * in_ord_accept */
-	/* disable interrupts */
-	__raw_writel(0x1FFFFFFF, DDR_CR082);
 
 	/* ODT */
 	__raw_writel(0x01010000, DDR_CR087);	/* odt: wr_map_cs0
@@ -264,7 +268,7 @@ unsigned long ddr_ctrl_init(void)
 	__raw_writel(0x02020000, DDR_CR120);
 	__raw_writel(0x00000202, DDR_CR121);
 	__raw_writel(0x01010064, DDR_CR122);
-	__raw_writel(0x00000101, DDR_CR123);
+	__raw_writel(0x00010101, DDR_CR123);
 	__raw_writel(0x00000064, DDR_CR124);
 
 	/* TDFI */
@@ -274,18 +278,33 @@ unsigned long ddr_ctrl_init(void)
 
 	__raw_writel(0x00000000, DDR_CR131);
 	__raw_writel(0x00000506, DDR_CR132);	/* wrlat, rdlat */
-	__raw_writel(0x02000000, DDR_CR137);
+	__raw_writel(0x00020000, DDR_CR137);
 	__raw_writel(0x04070303, DDR_CR139);
 
 	__raw_writel(0x00000000, DDR_CR136);
-
-	__raw_writel(0x68200000, DDR_CR154);
-	__raw_writel(0x00000202, DDR_CR155);	/* pad_ibe, _sel */
+#if 0
+	__raw_writel(0x80000301, DDR_CR138);
+	__raw_writel(0x0000000A, DDR_CR140);
+	__raw_writel(0x00000000, DDR_CR141);
+	__raw_writel(0x0010ffff, DDR_CR143);
+	__raw_writel(0x16070303, DDR_CR144);
+	__raw_writel(0x0000000f, DDR_CR145);
+	__raw_writel(0x00000000, DDR_CR146);
+	__raw_writel(0x00000000, DDR_CR147);
+	__raw_writel(0x00000000, DDR_CR148);
+	__raw_writel(0x00000000, DDR_CR149);
+	__raw_writel(0x00000000, DDR_CR150);
+	__raw_writel(0x00000204, DDR_CR151);
+	__raw_writel(0x00000000, DDR_CR152);
+	__raw_writel(0x00000000, DDR_CR153);
+#endif
+	__raw_writel(0x682C0000, DDR_CR154);
+	__raw_writel(0x0000002d, DDR_CR155);	/* pad_ibe, _sel */
 	__raw_writel(0x00000006, DDR_CR158);	/* twr */
-	__raw_writel(0x00000006, DDR_CR159);	/* todth */
+	__raw_writel(0x00000006, DDR_CR161);	/* todth */ // Freescale writes to CR159? Not sure why.
 
 	ddr_phy_init();
-
+	__raw_writel(0x1FFFFFFF, DDR_CR082);
 	__raw_writel(0x00000601, DDR_CR000);	/* LPDDR2 or DDR3, start */
 
 	udelay(200);
