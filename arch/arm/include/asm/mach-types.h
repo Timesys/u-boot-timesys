@@ -1110,6 +1110,7 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_VYBRID_VF5XX         4147
 #define MACH_TYPE_VYBRID_VF4XX         4148
 #define MACH_TYPE_PCM052	       4391
+#define MACH_TYPE_PCL052               4693
 
 #ifdef CONFIG_ARCH_EBSA110
 # ifdef machine_arch_type
@@ -14287,6 +14288,17 @@ extern unsigned int __machine_arch_type;
 # define machine_is_pcm052()		(0)
 #endif
 
+#ifdef CONFIG_MACH_PCL052
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_PCL052
+# endif
+# define machine_is_pcl052()	(machine_arch_type == MACH_TYPE_PCL052)
+#else
+# define machine_is_pcl052()	(0)
+#endif
 /*
  * These have not yet been registered
  */
