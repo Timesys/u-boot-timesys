@@ -112,11 +112,13 @@
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
-#define MTDIDS_DEFAULT			"nand0=NAND"
-#define MTDPARTS_DEFAULT		"mtdparts=NAND:256k(bootloader)"\
+#define MTDIDS_DEFAULT			"nand0=NAND,nor0=qspi0-a,nor1=qspi0-b"
+#define MTDPARTS_DEFAULT		"mtdparts=NAND:256k(spare)"\
+					",256k(bootloader)"\
 					",128k(env)"\
 					",4m(kernel)"\
-					",-(rootfs)"
+					",-(rootfs)"\
+					",qspi0-a:-(jffs2),qspio0-b:-(jffs2)"
 #define NORMAL_MTDPARTS_DEFAULT		MTDPARTS_DEFAULT
 #ifdef CONFIG_CMD_NAND
 #define CONFIG_JFFS2_NAND
@@ -202,24 +204,24 @@
 	"bootargs_nand=setenv bootargs ${bootargs} "			\
 		"root=/dev/mtdblock3 rootfstype=jffs2\0"		\
 	"bootargs_mtd=setenv bootargs ${bootargs} ${mtdparts}\0"	\
-	"bootcmd_sd=run bootargs_base bootargs_sd; mmc rescan; "	\
+	"bootcmd_sd=run bootargs_base bootargs_sd bootargs_mtd; mmc rescan; " \
 		"fatload mmc 0:2 ${loadaddr} ${bootfile}; bootm ${loadaddr}\0" \
-	"bootcmd_net=run bootargs_base bootargs_net; "			\
+	"bootcmd_net=run bootargs_base bootargs_net bootargs_mtd; "	\
 		"tftpboot ${loadaddr} ${tftploc}${bootfile}; bootm\0"	\
 	"bootcmd_nand='run bootargs_base bootargs_nand bootargs_mtd; "	\
-		"nand read ${loadaddr} 0x00060000 0x400000; "		\
+		"nand read ${loadaddr} 0x000A0000 0x400000; "		\
 		"bootm ${loadaddr}\0"					\
 	"tftploc=/path/to/tftp/directory/\0"				\
 	"nfs_root=/path/to/nfs/root\0"					\
 	"mtdparts=" MTDPARTS_DEFAULT "\0"				\
 	"update_kernel_from_sd=mw.b $(loadaddr) 0xff 0x400000; "	\
 		"mmc rescan; fatload mmc 0:2 ${loadaddr} ${bootfile}; "	\
-		"nand erase 0x60000 0x400000; "				\
-		"nand write.i ${loadaddr} 0x60000 0x400000\0"		\
-	"update_rootfs_from_tftp=mw.b ${loadaddr} 0xff 0x800000; "	\
+		"nand erase 0xA0000 0x400000; "				\
+		"nand write.i ${loadaddr} 0xA0000 0x400000\0"		\
+	"update_rootfs_from_tftp=mw.b ${loadaddr} 0xff 0x8F200000; "	\
 		"tftp ${loadaddr} ${tftp}${filesys}; "			\
-		"nand erase 0x460000 0x8F20000; "			\
-		"nand write.i ${loadaddr} 0x460000 0x8F20000\0"		\
+		"nand erase 0x4A0000 0x8F20000; "			\
+		"nand write.i ${loadaddr} 0x4A0000 0x8F20000\0"		\
 	"filesys=rootfs.jffs2\0"
 
 /* Miscellaneous configurable options */
@@ -254,7 +256,7 @@
 
 /* Physical Memory Map */
 #define CONFIG_NR_DRAM_BANKS		1
-#define PHYS_SDRAM_1_SIZE		(128 * 1024 * 1024)
+#define PHYS_SDRAM_1_SIZE		(256 * 1024 * 1024)
 
 #define CONFIG_SYS_SDRAM_BASE		(0x80000000)
 #define CONFIG_SYS_INIT_RAM_ADDR	(IRAM_BASE_ADDR)
@@ -320,6 +322,7 @@
 #define CONFIG_SYS_ANADIG_SYS_PLL_LOCK	0x00000000
 
 /* FLASH and environment organization */
+/* FIXME: env only saves to SD/MMC; needs to be boot source aware */
 #define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
