@@ -1,7 +1,8 @@
 /*
  * Copyright 2012 Freescale Semiconductor, Inc.
+ * Copyright 2013 Device Solutions Ltd
  *
- * Configuration settings for the vybrid Board
+ * Configuration settings for the Device Solutions Quartz Board
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -60,7 +61,7 @@
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
-#define CONFIG_SYS_UART_PORT		(2)
+#define CONFIG_SYS_UART_PORT		(0)
 #define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE	{9600, 19200, 38400, 57600, 115200}
 
@@ -110,9 +111,7 @@
  * NAND FLASH
  */
 #ifdef CONFIG_CMD_NAND
-#define CONFIG_MTD_NAND_FSL_NFC_SWECC	1
-//#define CONFIG_MTD_NAND_FSL_8_BIT 1
-//#define CONFIG_RESET_PHY_R
+#define CONFIG_MTD_NAND_FSL_8_BIT 1
 #define CONFIG_JFFS2_NAND
 #define CONFIG_NAND_FSL_NFC
 #define CONFIG_SYS_NAND_BASE		0x400E0000
@@ -172,7 +171,7 @@
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser */
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
-#define CONFIG_SYS_PROMPT		"Vybrid U-Boot > "
+#define CONFIG_SYS_PROMPT		"Quartz U-Boot > "
 #undef CONFIG_AUTO_COMPLETE
 #define CONFIG_SYS_CBSIZE		256	/* Console I/O Buffer Size */
 /* Print Buffer Size */

@@ -1,5 +1,8 @@
 /*
  * Copyright 2012 Freescale Semiconductor, Inc.
+ * Copyright 2013 Device Solutions Ltd
+ *
+ * Board specific code for the Device Solutions Quartz (Vybrid based) board
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -47,31 +50,18 @@ struct fsl_esdhc_cfg esdhc_cfg[2] = {
 };
 #endif
 
+// Quick and dirty code to disable User LEDs and Outputs at boot
+// LED1 - PTD29 - GPIO_65 - GP2_1
+// LED2 - PTD30 - GPIO_64 - GP2_0
+// OUT1 - PTB23 - GPIO_93 - GP2_29
+// OUT2 - PTB22 - GPIO_44 - GP1_12
 void setup_outputs(void)
 {
 #define GPIO_PAD_SETUP	0x00000062
-	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_064);
-	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_065);
-	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_093);
-	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_094);
-
-// turn the LEDS off - messing with my head...
-#define GPIO0_PDOR 0x400FF000
-#define GPIO0_PSOR 0x400FF004
-#define GPIO0_PCOR 0x400FF008
-#define GPIO3_PDOR 0x400FF0C0
-#define GPIO3_PSOR 0x400FF0C4
-#define GPIO3_PCOR 0x400FF0C8
-
-#define LED1	(0x00000001<<6)
-#define LED2	(0x00000001<<7)
-#define OUTPUT1 (0x00000001<<13)
-#define OUTPUT2 (0x00000001<<14)
-
-	__raw_writel(GPIO0_PDOR, OUTPUT1 | OUTPUT2 );
-	__raw_writel(GPIO3_PDOR, LED1 | LED2 );
-	__raw_writel(GPIO3_PSOR, LED1 );
-	__raw_writel(GPIO3_PCOR, LED2 );
+	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_065);	
+	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_064);	
+	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_093);	
+	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_044);	
 }
 
 
@@ -334,8 +324,6 @@ unsigned long ddr_ctrl_init(void)
 
 int dram_init(void)
 {
-	setup_outputs();
-
 	setup_iomux_ddr();
 #ifdef CONFIG_SYS_UBOOT_IN_GPURAM
 	gd->ram_size = 0x80000;
@@ -370,33 +358,6 @@ int fecpin_setclear(struct eth_device *dev, int setclear)
 
 	if (setclear) {
 		if (info->iobase == CONFIG_SYS_FEC0_IOBASE) {
-
-			/* Do PHY reset here - set all PADs as inputs
-			   on-board resistors will configure the correct value */
-			__raw_writel(0x00003190, IOMUXC_PAD_045);	/*MDC*/
-			__raw_writel(0x00003190, IOMUXC_PAD_046);	/*MDIO*/
-			__raw_writel(0x00003190, IOMUXC_PAD_047);	/*RxDV*/
-			__raw_writel(0x00003190, IOMUXC_PAD_048);	/*RxD1*/
-			__raw_writel(0x00003190, IOMUXC_PAD_049);	/*RxD0*/
-			__raw_writel(0x00003190, IOMUXC_PAD_050);	/*RxER*/
-			__raw_writel(0x00003190, IOMUXC_PAD_051);	/*TxD1*/
-			__raw_writel(0x00003190, IOMUXC_PAD_052);	/*TxD0*/
-			__raw_writel(0x00003190, IOMUXC_PAD_053);	/*TxEn*/
-
-			/* reset - PTA7 - pad 134 / GPIO4-6 */
-#define GPIO4_PDOR 0x400FF100
-#define GPIO4_PSOR 0x400FF104
-#define GPIO4_PCOR 0x400FF108
-#define PHY0_RESET (1<<6)
-			__raw_writel(0x00000062, IOMUXC_PAD_134);	/* setup output PAD */
-			u32 gpio4_pdor = __raw_readl( GPIO4_PDOR );
-			__raw_writel( (gpio4_pdor | PHY0_RESET), GPIO4_PDOR);  /* direction register */
-			__raw_writel( PHY0_RESET, GPIO4_PSOR);		/* high */
-			udelay(50000);								/* wait 50ms */
-			__raw_writel( PHY0_RESET, GPIO4_PCOR);		/* low */ 
-			udelay(50000);								/* wait 50ms */
-			__raw_writel( PHY0_RESET, GPIO4_PSOR);		/* high */
-
 			__raw_writel(0x00103192, IOMUXC_PAD_045);	/*MDC*/
 			__raw_writel(0x00103193, IOMUXC_PAD_046);	/*MDIO*/
 			__raw_writel(0x00103191, IOMUXC_PAD_047);	/*RxDV*/
@@ -406,41 +367,9 @@ int fecpin_setclear(struct eth_device *dev, int setclear)
 			__raw_writel(0x00103192, IOMUXC_PAD_051);	/*TxD1*/
 			__raw_writel(0x00103192, IOMUXC_PAD_052);	/*TxD0*/
 			__raw_writel(0x00103192, IOMUXC_PAD_053);	/*TxEn*/
-
 			udelay(50000);	
-
-			//mcffec_miiphy_write("FEC0", 0x00, 0x1f, 0x8190 );
-			//mcffec_miiphy_write("FEC0", 0x00, 0x00, 0x1200 );
-			//miiphy_write("FEC", 0x00, 0x1f, 0x8190 ); /* need to enable clock for FEC1 */
-			puts("reset_phy 0  - set PHY CONFIG and CONTROL\n");
 		}
 		if (info->iobase == CONFIG_SYS_FEC1_IOBASE) {
-			/* Do PHY reset here - set all PADs as inputs
-			   on-board resistors will configure the correct value */
-			__raw_writel(0x00003190, IOMUXC_PAD_054);	/*MDC*/
-			__raw_writel(0x00003190, IOMUXC_PAD_055);	/*MDIO*/
-			__raw_writel(0x00003190, IOMUXC_PAD_056);	/*RxDV*/
-			__raw_writel(0x00003190, IOMUXC_PAD_057);	/*RxD1*/
-			__raw_writel(0x00003190, IOMUXC_PAD_058);	/*RxD0*/
-			__raw_writel(0x00003190, IOMUXC_PAD_059);	/*RxER*/
-			__raw_writel(0x00003190, IOMUXC_PAD_060);	/*TxD1*/
-			__raw_writel(0x00003190, IOMUXC_PAD_061);	/*TxD0*/
-			__raw_writel(0x00003190, IOMUXC_PAD_062);	/*TxEn*/
-
-			/* reset - PTA17 - pad 007 / GPIO0-7 */
-#define GPIO0_PDOR 0x400FF000
-#define GPIO0_PSOR 0x400FF004
-#define GPIO0_PCOR 0x400FF008
-#define PHY1_RESET (1<<7)
-			__raw_writel(0x00000062, IOMUXC_PAD_007);	/* setup output PAD */
-			u32 gpio0_pdor = __raw_readl( GPIO0_PDOR );
-			__raw_writel( (gpio0_pdor | PHY0_RESET), GPIO0_PDOR);  /* direction register */
-			__raw_writel( PHY1_RESET, GPIO0_PSOR);		/* high */
-			udelay(50000);								/* wait 50ms */
-			__raw_writel( PHY1_RESET, GPIO0_PCOR);		/* low */ 
-			udelay(50000);								/* wait 50ms */
-			__raw_writel( PHY1_RESET, GPIO0_PSOR);		/* high */
-
 			__raw_writel(0x00103192, IOMUXC_PAD_054);	/*MDC*/
 			__raw_writel(0x00103193, IOMUXC_PAD_055);	/*MDIO*/
 			__raw_writel(0x00103191, IOMUXC_PAD_056);	/*RxDV*/
@@ -450,12 +379,7 @@ int fecpin_setclear(struct eth_device *dev, int setclear)
 			__raw_writel(0x00103192, IOMUXC_PAD_060);	/*TxD1*/
 			__raw_writel(0x00103192, IOMUXC_PAD_061);	/*TxD0*/
 			__raw_writel(0x00103192, IOMUXC_PAD_062);	/*TxEn*/
-
 			udelay(50000);	
-
-			//miiphy_write("FEC1", 0x00, 0x1f, 0x8190 );
-			puts("reset_phy 1 - set PHY CONFIG\n");
-
 		}
 	} else {
 		if (info->iobase == CONFIG_SYS_FEC0_IOBASE) {
@@ -612,6 +536,7 @@ int board_early_init_f(void)
 #ifdef CONFIG_NAND_FSL_NFC
 	setup_iomux_nfc();
 #endif
+	setup_outputs();
 	return 0;
 }
 

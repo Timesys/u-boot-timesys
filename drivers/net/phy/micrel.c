@@ -128,11 +128,67 @@ static struct phy_driver ksz9021_driver = {
 	.shutdown = &genphy_shutdown,
 };
 
+
+/* Micrel ksz8051 */
+static int ksz8051_config(struct phy_device *phydev)
+{
+	unsigned ctrl1000 = 0;
+	const unsigned master = CTRL1000_PREFER_MASTER |
+			CTRL1000_CONFIG_MASTER | CTRL1000_MANUAL_CONFIG;
+	unsigned features = phydev->drv->features;
+
+	if (getenv("disable_giga"))
+		features &= ~(SUPPORTED_1000baseT_Half |
+				SUPPORTED_1000baseT_Full);
+	/* force master mode for 1000BaseT due to chip errata */
+	if (features & SUPPORTED_1000baseT_Half)
+		ctrl1000 |= ADVERTISE_1000HALF | master;
+	if (features & SUPPORTED_1000baseT_Full)
+		ctrl1000 |= ADVERTISE_1000FULL | master;
+	phydev->advertising = phydev->supported = features;
+	phy_write(phydev, MDIO_DEVAD_NONE, MII_CTRL1000, ctrl1000);
+	genphy_config_aneg(phydev);
+	genphy_restart_aneg(phydev);
+	return 0;
+}
+
+static int ksz8051_startup(struct phy_device *phydev)
+{
+	unsigned phy_ctl;
+	genphy_update_link(phydev);
+	phy_ctl = phy_read(phydev, MDIO_DEVAD_NONE, MII_KSZ9021_PHY_CTL);
+
+	if (phy_ctl & MIIM_KSZ9021_PHYCTL_DUPLEX)
+		phydev->duplex = DUPLEX_FULL;
+	else
+		phydev->duplex = DUPLEX_HALF;
+
+	if (phy_ctl & MIIM_KSZ9021_PHYCTL_1000)
+		phydev->speed = SPEED_1000;
+	else if (phy_ctl & MIIM_KSZ9021_PHYCTL_100)
+		phydev->speed = SPEED_100;
+	else if (phy_ctl & MIIM_KSZ9021_PHYCTL_10)
+		phydev->speed = SPEED_10;
+	return 0;
+}
+
+static struct phy_driver KSZ8051_driver = {
+	.name = "Micrel KSZ8051",
+	.uid = 0x221550,
+	.mask = 0xfffff0,
+	.features = PHY_BASIC_FEATURES,
+	.config = &genphy_config,
+	.startup = &genphy_startup,
+	.shutdown = &genphy_shutdown,
+};
 int phy_micrel_init(void)
 {
+	puts("register micrel phy\n");
+
 	phy_register(&KSZ804_driver);
 	phy_register(&KS8721_driver);
 	phy_register(&ksz9021_driver);
+	phy_register(&ksz9051_driver);
 
 	return 0;
 }
