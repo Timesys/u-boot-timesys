@@ -112,13 +112,12 @@
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
-#define MTDIDS_DEFAULT			"nand0=NAND,nor0=qspi0-a,nor1=qspi0-b"
+#define MTDIDS_DEFAULT			"nand0=NAND"
 #define MTDPARTS_DEFAULT		"mtdparts=NAND:256k(spare)"\
 					",256k(bootloader)"\
 					",128k(env)"\
 					",4m(kernel)"\
-					",-(rootfs)"\
-					",qspi0-a:-(jffs2),qspio0-b:-(jffs2)"
+					",-(rootfs)"
 #define NORMAL_MTDPARTS_DEFAULT		MTDPARTS_DEFAULT
 #ifdef CONFIG_CMD_NAND
 #define CONFIG_JFFS2_NAND
