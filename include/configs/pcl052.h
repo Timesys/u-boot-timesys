@@ -25,6 +25,7 @@
  /* High Level Configuration Options */
 
 #define CONFIG_VYBRID
+#define CONFIG_MACH_PCL052
 
 #define CONFIG_SYS_VYBRID_HCLK		24000000
 #define CONFIG_SYS_VYBRID_CLK32		32768
