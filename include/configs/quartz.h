@@ -37,6 +37,10 @@
 
 #include <asm/arch/vybrid-regs.h>
 
+
+// Define board revision
+//#define CONFIG_QDK_REVA
+
 /*
  * Disabled for now due to build problems under Debian and a significant
  * increase in the final file size: 144260 vs. 109536 Bytes.
@@ -50,7 +54,7 @@
 
 #define CONFIG_MACH_TYPE		MACH_TYPE_VYBRID_VF6XX
 /* Size of malloc() pool */
-#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 2 * 1024 * 1024)
+#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 4 * 1024 * 1024)
 
 #define CONFIG_BOARD_LATE_INIT
 
@@ -85,6 +89,7 @@
 #undef CONFIG_CMD_IMLS
 #undef CONFIG_CMD_LOADB		/* loadb */
 #undef CONFIG_CMD_LOADS		/* loads */
+//#define CONFIG_CMD_BMP
 
 #define CONFIG_MMC
 #ifdef CONFIG_MMC
@@ -123,13 +128,37 @@
 
 //#define CONFIG_QUAD_SPI
 
+/*
+ * Display Support
+ */
+
+/* Framebuffer and LCD */
+//#define CONFIG_LCD
+#define CONFIG_CMD_BMP
+#define CONFIG_LCD_LOGO
+
+#define CONFIG_VIDEO
+#define CONFIG_VIDEO_MVF
+#define CONFIG_CFB_CONSOLE
+#define CONFIG_VGA_AS_SINGLE_DEVICE
+#define CONFIG_SYS_CONSOLE_IS_IN_ENV
+//#define CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+#define CONFIG_VIDEO_BMP_RLE8
+#define CONFIG_SPLASH_SCREEN
+#define CONFIG_SPLASH_SCREEN_ALIGN
+
+
 /* Network configuration */
+
+/* Define for LGA */
+#define CONFIG_QUARTZ_FEC1_ONLY 1
+
 #define CONFIG_MCFFEC
 #ifdef CONFIG_MCFFEC
-#	define CONFIG_MII		1
-#	define CONFIG_MII_INIT		1
+#	define CONFIG_MII						1
+#	define CONFIG_MII_INIT					1
 #	define CONFIG_SYS_DISCOVER_PHY
-#	define CONFIG_SYS_RX_ETH_BUFFER	8
+#	define CONFIG_SYS_RX_ETH_BUFFER			8
 #	define CONFIG_SYS_FAULT_ECHO_LINK_DOWN
 
 #	define CONFIG_SYS_FEC0_PINMUX	0
@@ -137,17 +166,23 @@
 #	define CONFIG_SYS_FEC0_IOBASE	MACNET0_BASE_ADDR
 #	define CONFIG_SYS_FEC1_IOBASE	MACNET1_BASE_ADDR
 #	define CONFIG_SYS_FEC0_MIIBASE	MACNET0_BASE_ADDR
-#	define CONFIG_SYS_FEC1_MIIBASE	MACNET0_BASE_ADDR
+#	define CONFIG_SYS_FEC1_MIIBASE	MACNET1_BASE_ADDR
 #	define MCFFEC_TOUT_LOOP 50000
 #	undef CONFIG_HAS_ETH1
 
 #	define CONFIG_ETHADDR		00:e0:0c:bc:e5:60
 #	define CONFIG_ETH1ADDR		00:e0:0c:bc:e5:61
+
+#   ifdef CONFIG_QUARTZ_FEC1_ONLY
+#	define CONFIG_ETHPRIME		"FEC1"
+#   else
 #	define CONFIG_ETHPRIME		"FEC0"
+#   endif
+
 #	define CONFIG_IPADDR		192.168.1.222
 #	define CONFIG_NETMASK		255.255.255.0
-#	define CONFIG_SERVERIP		192.168.1.200
-#	define CONFIG_GATEWAYIP		192.168.1.200
+#	define CONFIG_SERVERIP		192.168.1.1
+#	define CONFIG_GATEWAYIP		192.168.1.1
 
 #	define CONFIG_OVERWRITE_ETHADDR_ONCE
 
@@ -163,9 +198,10 @@
 #endif
 
 #define CONFIG_BOOTDELAY		3
-#define CONFIG_ETHPRIME			"FEC0"
 #define CONFIG_LOADADDR			0x80010000	/* loadaddr env var */
 #define CONFIG_ARP_TIMEOUT		200UL
+
+
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
@@ -225,7 +261,7 @@
 #define CONFIG_SYS_CLKCTL_CCGR5		0xFFFFFFFF
 #define CONFIG_SYS_CLKCTL_CCGR6		0xFFFFFFFF
 #define CONFIG_SYS_CLKCTL_CCGR7		0xFFFFFFFF
-#define CONFIG_SYS_CLKCTL_CCGR8		0xFFFFFFFF
+#define CONFIG_SYS_CLKCTL_CCGR8		0x3FFFFFFF
 #define CONFIG_SYS_CLKCTL_CCGR9		0xFFFFFFFF
 #define CONFIG_SYS_CLKCTL_CCGR10	0xFFFFFFFF
 #define CONFIG_SYS_CLKCTL_CCGR11	0xFFFFFFFF
@@ -271,5 +307,13 @@
 #define CONFIG_ENV_SIZE			(8 * 1024)
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
+
+#define CONFIG_BOOTARGS      "mem=128M console=ttymxc0,115200 root=/dev/mmcblk0p2 rw rootwait video=dcu0:1024x768"
+#define CONFIG_BOOTCOMMAND   "fatload mmc 0:1 0x81000000 uImage;bootm 0x81000000"
+
+#define CONFIG_EXTRA_ENV_SETTINGS			\
+	"video_lvds=setenv videomode video=ctfb:x:1024,y:768,depth:18,mode:0,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
+	"video_7inch=setenv videomode video=ctfb:x:800,y:480,depth:18,mode:0,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
+
 
 #endif

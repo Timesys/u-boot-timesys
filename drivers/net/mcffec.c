@@ -52,8 +52,11 @@
 #define BD_ENET_RX_W_E		(BD_ENET_RX_WRAP | BD_ENET_RX_EMPTY)
 #define BD_ENET_TX_RDY_LST	(BD_ENET_TX_READY | BD_ENET_TX_LAST)
 
+#define FEC1_INDEX	1
+
 DECLARE_GLOBAL_DATA_PTR;
 
+// Swap these for Quartz as FEC1 is the primary FEC and FEC0 is not present on the LGA 
 struct fec_info_s fec_info[] = {
 #ifdef CONFIG_SYS_FEC0_IOBASE
 	{
@@ -569,8 +572,11 @@ int mcffec_initialize(bd_t * bis)
 	u32 tmp = CONFIG_SYS_INIT_RAM_ADDR + 0x1000;
 #endif
 
+#if defined(CONFIG_QUARTZ_FEC1_ONLY) 
+	for (i = FEC1_INDEX; i < sizeof(fec_info) / sizeof(fec_info[0]); i++) {
+#else
 	for (i = 0; i < sizeof(fec_info) / sizeof(fec_info[0]); i++) {
-
+#endif
 		dev =
 		    (struct eth_device *)memalign(CONFIG_SYS_CACHELINE_SIZE,
 						  sizeof *dev);
@@ -623,10 +629,18 @@ int mcffec_initialize(bd_t * bis)
 		miiphy_register(dev->name,
 				mcffec_miiphy_read, mcffec_miiphy_write);
 #endif
+
+#if !defined(CONFIG_QUARTZ_FEC1_ONLY)
 		if (i > 0)
 			fec_info[i - 1].next = &fec_info[i];
+#endif
 	}
+
+#if defined(CONFIG_QUARTZ_FEC1_ONLY)
+	fec_info[FEC1_INDEX].next = &fec_info[FEC1_INDEX];
+#else
 	fec_info[i - 1].next = &fec_info[0];
+#endif
 
 	/* default speed */
 	bis->bi_ethspeed = 10;

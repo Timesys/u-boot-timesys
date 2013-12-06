@@ -94,6 +94,7 @@ phy_info_t phyinfo[] = {
 	{0, 0}
 };
 
+
 /*
  * mii_init -- Initialize the MII for MII command without ethernet
  * This function is a subset of eth_init
@@ -255,16 +256,20 @@ void __mii_init(void)
 
 	info->phy_addr = mii_discover_phy(dev);
 
-	/* code needed here to make the KSZ8051 work...  NOT ideal */
+	/* Dual PHY Setup on Quartz
+	   FEC1 - 25MHz crystal
+	   FEC0 - 50MHz input from FEC1
+	   Also setup LEDs for Link/Activity
+	*/
 	if( info->iobase == CONFIG_SYS_FEC0_IOBASE )
 	{
-		mcffec_miiphy_write(dev->name, info->phy_addr, 0x1f, 0x8190 );
 		mcffec_miiphy_write(dev->name, info->phy_addr, 0x00, 0x1200 );
+		mcffec_miiphy_write(dev->name, info->phy_addr, 0x1f, 0x8190 );
 	}
 	else
 	{
-		mcffec_miiphy_write(dev->name, info->phy_addr, 0x1f, 0x8110 );
 		mcffec_miiphy_write(dev->name, info->phy_addr, 0x00, 0x1200 );
+		mcffec_miiphy_write(dev->name, info->phy_addr, 0x1f, 0x8110 );
 	}
 
 	while (i < MCFFEC_TOUT_LOOP) {
