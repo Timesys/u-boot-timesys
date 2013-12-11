@@ -82,12 +82,14 @@ static char *get_reset_cause(void)
 	for (i = 0; i < 32; i++) {
 		bit = 1 << i;
 		if ((cause & bit) == bit) {
-			if (resetcause[i][0] != NULL)
+			if (resetcause[i][0] != 0) {
 				pbuf += sprintf(pbuf, "%s, ", resetcause[i]);
+				break;
+			}
 		}
 	}
 
-	if (buf[0] == NULL)
+	if (buf[0] == 0)
 		return 0;
 
 	return &buf[0];
@@ -99,13 +101,16 @@ int print_cpuinfo(void)
 	u32 cpurev;
 
 	cpurev = get_cpu_rev();
-	printf("CPU:   Freescale Vybrid %x family rev %d.%d at %d MHz\n",
+	/* Removed speed reporting as clock decode functions not implemented */
+	printf("CPU:   Freescale Vybrid %x family rev %d.%d\n", /* at %d MHz\n",   */
 		(cpurev & 0xFFF000) >> 12,
 		(cpurev & 0x000F0) >> 4,
-		(cpurev & 0x0000F) >> 0,
-		vybrid_get_clock(VYBRID_ARM_CLK) / 1000000);
-	if (get_reset_cause() != NULL)
+		(cpurev & 0x0000F) >> 0 /*,
+		vybrid_get_clock(VYBRID_ARM_CLK) / 1000000*/ );
+
+/*	if (get_reset_cause() != 0 )
 		printf("Reset cause: %s\n", get_reset_cause());
+*/
 	return 0;
 }
 #endif
