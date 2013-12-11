@@ -27,9 +27,11 @@
 
 /* GPIO registers */
 struct gpio_regs {
-	u32	gpio_dr;
-	u32	gpio_dir;
-	u32	gpio_psr;
+	u32	gpio_pdor;
+	u32	gpio_psor;
+	u32	gpio_pcor;
+	u32 gpio_ptor;
+	u32 gpio_pdir;
 };
 
 #endif

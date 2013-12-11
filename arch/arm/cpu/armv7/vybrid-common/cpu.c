@@ -99,7 +99,7 @@ int print_cpuinfo(void)
 	u32 cpurev;
 
 	cpurev = get_cpu_rev();
-	printf("CPU:   Freescale VyBrid %x family rev%d.%d at %d MHz\n",
+	printf("CPU:   Freescale Vybrid %x family rev %d.%d at %d MHz\n",
 		(cpurev & 0xFFF000) >> 12,
 		(cpurev & 0x000F0) >> 4,
 		(cpurev & 0x0000F) >> 0,

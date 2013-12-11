@@ -80,8 +80,14 @@
 #define MLB_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00043000)
 #define QSPI0_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00044000)
 #define IOMUXC_BASE_ADDR	(AIPS0_BASE_ADDR + 0x00048000)
+#define PORTA_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00049000)
+#define PORTB_BASE_ADDR		(AIPS0_BASE_ADDR + 0x0004A000)
+#define PORTC_BASE_ADDR		(AIPS0_BASE_ADDR + 0x0004B000)
+#define PORTD_BASE_ADDR		(AIPS0_BASE_ADDR + 0x0004C000)
+#define PORTE_BASE_ADDR		(AIPS0_BASE_ADDR + 0x0004D000)
 #define ANATOP_BASE_ADDR	(AIPS0_BASE_ADDR + 0x00050000)
 #define SCSCM_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00052000)
+#define DCU0_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00058000)
 #define ASRC_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00060000)
 #define SPDIF_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00061000)
 #define ESAI_BASE_ADDR		(AIPS0_BASE_ADDR + 0x00062000)
@@ -242,6 +248,11 @@ struct clkctl {
 	u32 ccpgr3;	/* 0x9C */
 };
 
+/* TCON registers */
+struct tconctl {
+	u32 ctrl1;	/* only need this as we use bypass mode */
+};
+
 /* WEIM registers */
 struct weim {
 	u32	cs0gcr1;
@@ -369,6 +380,74 @@ struct fuse_bank1_regs {
 	u32	fuse0_8[9];
 	u32	mac_addr[6];
 	u32	fuse15_31[0x11];
+};
+
+typedef struct  {
+	u32 ctrldescl_1;
+	u32 ctrldescl_2;
+	u32 ctrldescl_3;
+	u32 ctrldescl_4;
+	u32 ctrldescl_5;
+	u32 ctrldescl_6;
+	u32 ctrldescl_7;
+	u32 ctrldescl_8;
+	u32 ctrldescl_9;
+	u8  reserved[28];
+} layer_desc;
+struct dcu_regs {
+	u32 ctrldesccursor1;
+	u32 ctrldesccursor2;
+	u32 ctrldesccursor3;
+	u32 ctrldesccursor4;
+	u32 dcu_mode;
+	u32 bgnd;
+	u32 disp_size;
+	u32 hsyn_para;
+	u32 vsyn_para;
+	u32 synpol;
+	u32 threshold;
+	u32 int_status;
+	u32 int_mask;
+	u32 colbar_1;
+	u32 colbar_2;
+	u32 colbar_3;
+	u32 colbar_4;
+	u32 colbar_5;
+	u32 colbar_6;
+	u32 colbar_7;
+	u32 colbar_8;
+	u32 div_ratio;
+	u32 sign_calc_1;
+	u32 sign_calc_2;
+	u32 crc_val;
+	u32 pdi_status;
+	u32 pdi_sta_msk;
+	u32 parr_err_status1;
+	u32 parr_err_status2;
+	u32 reserved0[2];
+	u32 parr_err_status3;
+	u32 mask_parr_err_status1;
+	u32 mask_parr_err_status2;
+	u32 reserved1[2];
+	u32 mask_parr_err_status3;
+	u32 threshold_inp_buf_1;
+	u32 threshold_inp_buf_2;
+	u32 threshold_inp_buf_3;
+	u32 luma_comp;
+	u32 chroma_red;
+	u32 chroma_green;
+	u32 chroma_blue;
+	u32 crc_pos;
+	u32 lyr_intpol_en;
+	u32 lyr_luma_comp;
+	u32 lyr_chrm_red;
+	u32 lyr_chrm_grn;
+	u32 lyr_chrm_blue;
+	u32 comp_imsize;
+	u32 update_mode;
+	u32 underrun;
+	u32 reserved2[75];
+	layer_desc layer[64];
 };
 
 #define ANADIG_USB1_PLL_CTRL	(0x10)

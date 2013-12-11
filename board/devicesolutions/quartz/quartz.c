@@ -36,6 +36,7 @@
 #include <asm/arch/scsc_regs.h>
 #include <i2c.h>
 #include <mmc.h>
+#include <video_fb.h>
 #include <fsl_esdhc.h>
 #include <usb/ehci-fsl.h>
 //#include <mcfmii.h>
@@ -64,6 +65,19 @@ void setup_outputs(void)
 	__raw_writel(GPIO_PAD_SETUP, IOMUXC_PAD_044);	
 }
 
+//#define DISPLAY_GPIO_PAD_SETUP	0x0000006D
+#define DISPLAY_GPIO_PAD_SETUP	0x00000062
+
+void enable_lvds(void)
+{
+	__raw_writel(DISPLAY_GPIO_PAD_SETUP, IOMUXC_PAD_116);
+	__raw_writel(DISPLAY_GPIO_PAD_SETUP, IOMUXC_PAD_108);
+}
+
+void enable_backlight(void)
+{
+	__raw_writel(DISPLAY_GPIO_PAD_SETUP, IOMUXC_PAD_025);	
+}
 
 void setup_iomux_ddr(void)
 {
@@ -299,7 +313,7 @@ unsigned long ddr_ctrl_init(void)
 
 	__raw_writel(0x00000000, DDR_CR136);
 
-	__raw_writel(0x68200000, DDR_CR154);
+	__raw_writel(0x682C0000, DDR_CR154);    /* added 0x000c0000 from https://community.freescale.com/thread/308902 */
 	__raw_writel(0x00000202, DDR_CR155);	/* pad_ibe, _sel */
 	__raw_writel(0x00000006, DDR_CR158);	/* twr */
 	__raw_writel(0x00000006, DDR_CR159);	/* todth */
@@ -501,18 +515,49 @@ int board_mmc_init(bd_t *bis)
 }
 #endif
 
+void setup_iomux_dcu0(void)
+{
+	// DCU is on PTE0 - starting at PAD_105
+//	  IOMUXC->SINGLE.PTE0  = IOMUXC_PTE0_MUX_MODE(1)  | IOMUXC_PTE0_SPEED(3)  | IOMUXC_PTE0_SRE_MASK  | IOMUXC_PTE0_DSE(1)  | IOMUXC_PTE0_OBE_MASK;  // HSYNC
+// increase DSE to max
+
+#define DCU_IOMUX_VALUE 0x001039c2 
+
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_105); /* PTE0  - HSYNC */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_106); /* PTE1  - VSYNC */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_107); /* PTE2  - PCLK */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_108); /* PTE3  - NOT USED FOR LCD */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_109); /* PTE4  - DE */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_110); /* PTE5  - R0 */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_111); /* PTE6  - R1 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_112); /* PTE7  - R2 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_113); /* PTE8  - R3 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_114); /* PTE9  - R4 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_115); /* PTE10 - R5 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_116); /* PTE11 - R6 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_117); /* PTE12 - R7 */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_118); /* PTE13 - G0 */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_119); /* PTE14 - G1 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_120); /* PTE15 - G2 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_121); /* PTE16 - G3 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_122); /* PTE17 - G4 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_123); /* PTE18 - G5 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_124); /* PTE19 - G6 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_125); /* PTE20 - G7 */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_126); /* PTE21 - B0 */
+//	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_127); /* PTE22 - B1 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_128); /* PTE23 - B2 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_129); /* PTE24 - B3 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_130); /* PTE25 - B4 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_131); /* PTE26 - B5 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_132); /* PTE27 - B6 */
+	__raw_writel(DCU_IOMUX_VALUE, IOMUXC_PAD_133); /* PTE28 - B7 */
+
+}
+
 #ifdef CONFIG_NAND_FSL_NFC
 void setup_iomux_nfc(void)
 {
-/*	__raw_writel(0x002038df, IOMUXC_PAD_063);
-	__raw_writel(0x002038df, IOMUXC_PAD_064);
-	__raw_writel(0x002038df, IOMUXC_PAD_065);
-	__raw_writel(0x002038df, IOMUXC_PAD_066);
-	__raw_writel(0x002038df, IOMUXC_PAD_067);
-	__raw_writel(0x002038df, IOMUXC_PAD_068);
-	__raw_writel(0x002038df, IOMUXC_PAD_069);
-	__raw_writel(0x002038df, IOMUXC_PAD_070); */
-
 	__raw_writel(0x002038df, IOMUXC_PAD_071);
 	__raw_writel(0x002038df, IOMUXC_PAD_072);
 	__raw_writel(0x002038df, IOMUXC_PAD_073);
@@ -536,7 +581,11 @@ int board_early_init_f(void)
 #ifdef CONFIG_NAND_FSL_NFC
 	setup_iomux_nfc();
 #endif
+	setup_iomux_dcu0();
 	setup_outputs();
+	enable_backlight();
+	enable_lvds();
+
 	return 0;
 }
 

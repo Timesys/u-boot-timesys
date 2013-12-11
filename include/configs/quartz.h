@@ -311,9 +311,12 @@
 #define CONFIG_BOOTARGS      "mem=128M console=ttymxc0,115200 root=/dev/mmcblk0p2 rw rootwait video=dcu0:1024x768"
 #define CONFIG_BOOTCOMMAND   "fatload mmc 0:1 0x81000000 uImage;bootm 0x81000000"
 
+
 #define CONFIG_EXTRA_ENV_SETTINGS			\
-	"video_lvds=setenv videomode video=ctfb:x:1024,y:768,depth:18,mode:0,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
-	"video_7inch=setenv videomode video=ctfb:x:800,y:480,depth:18,mode:0,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
+	"video_lvds=setenv videomode video=ctfb:mode:0,x:1024,y:768,depth:18,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
+	"video_7inch=setenv videomode video=ctfb:mode:0,x:800,y:480,depth:18,pclk:30,le:40,ri:40,up:13,lo:29,hs:48,vs:3,sync:100663296,vmode:1\0"  \
+	"nand_splash7=0xc0000\0" \
+	"nand_lvds=0x300000\0" \
 
 
 #endif
