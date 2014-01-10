@@ -26,12 +26,13 @@
 #define __ASM_ARCH_VYBRID_GPIO_H
 
 /* GPIO registers */
-struct gpio_regs {
+typedef struct {
 	u32	gpio_pdor;
 	u32	gpio_psor;
 	u32	gpio_pcor;
 	u32 gpio_ptor;
 	u32 gpio_pdir;
-};
+} gpio_regs;
+
 
 #endif
