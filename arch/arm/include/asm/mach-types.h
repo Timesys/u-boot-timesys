@@ -1109,6 +1109,7 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_VYBRID_VF6XX         4146
 #define MACH_TYPE_VYBRID_VF5XX         4147
 #define MACH_TYPE_VYBRID_VF4XX         4148
+#define MACH_TYPE_DS_QUARTZ			   4837
 
 #ifdef CONFIG_ARCH_EBSA110
 # ifdef machine_arch_type
