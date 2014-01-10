@@ -151,7 +151,7 @@
 /* Network configuration */
 
 /* Define for LGA */
-#define CONFIG_QUARTZ_FEC1_ONLY 1
+//#define CONFIG_QUARTZ_FEC1_ONLY 1
 
 #define CONFIG_MCFFEC
 #ifdef CONFIG_MCFFEC
