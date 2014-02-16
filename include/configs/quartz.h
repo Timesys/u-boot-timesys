@@ -303,10 +303,18 @@
 /* FLASH and environment organization */
 #define CONFIG_SYS_NO_FLASH
 
+#define CONFIG_QUARTZ_ENV_NAND 1
+
+#ifdef CONFIG_QUARTZ_ENV_NAND 
+#define CONFIG_ENV_OFFSET		(0x000c0000)
+#define CONFIG_ENV_SIZE			(8 * 1024)
+#define CONFIG_ENV_IS_IN_NAND
+#else
 #define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
 #define CONFIG_ENV_SIZE			(8 * 1024)
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		0
+#endif
 
 #define CONFIG_BOOTARGS      "mem=128M console=ttymxc0,115200 root=/dev/mmcblk0p2 rw rootwait video=dcu0:1024x768"
 #define CONFIG_BOOTCOMMAND   "fatload mmc 0:1 0x81000000 uImage;bootm 0x81000000"
