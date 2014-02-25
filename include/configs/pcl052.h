@@ -189,18 +189,18 @@
 
 #define CONFIG_BOOTCOMMAND              "run bootcmd_sd"
 #define CONFIG_EXTRA_ENV_SETTINGS					\
-	"bootfile=uImage-3.0-ts-armv7l\0"				\
+	"bootfile=uImage\0"				\
 	"bootargs_base=setenv bootargs rw mem=256M "			\
-		"console=ttymxc1,115200n8 init=/sbin/init\0" 		\
+		"console=ttymxc1,115200n8\0" 		\
 	"bootargs_sd=setenv bootargs ${bootargs} "			\
-		"root=/dev/mmcblk0p3 rootwait rootfstype=ext2\0"	\
+		"root=/dev/mmcblk0p2 rootwait\0"	\
 	"bootargs_net=setenv bootargs ${bootargs} root=/dev/nfs ip=dhcp " \
 		"nfsroot=${serverip}:${nfs_root},v3,tcp\0"		\
 	"bootargs_nand=setenv bootargs ${bootargs} "			\
-		"root=/dev/mtdblock3 rootfstype=jffs2\0"		\
+		"root=/dev/mtdblock2 rootfstype=jffs2\0"		\
 	"bootargs_mtd=setenv bootargs ${bootargs} ${mtdparts}\0"	\
 	"bootcmd_sd=run bootargs_base bootargs_sd bootargs_mtd; mmc rescan; " \
-		"fatload mmc 0:2 ${loadaddr} ${bootfile}; bootm ${loadaddr}\0" \
+		"fatload mmc 0:1 ${loadaddr} ${bootfile}; bootm ${loadaddr}\0" \
 	"bootcmd_net=run bootargs_base bootargs_net bootargs_mtd; "	\
 		"tftpboot ${loadaddr} ${tftploc}${bootfile}; bootm\0"	\
 	"bootcmd_nand='run bootargs_base bootargs_nand bootargs_mtd; "	\
