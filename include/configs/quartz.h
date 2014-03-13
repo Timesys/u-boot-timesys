@@ -317,7 +317,7 @@
 #endif
 
 #define CONFIG_BOOTARGS      "mem=128M console=ttymxc0,115200 root=/dev/mmcblk0p2 rw rootwait video=dcu0:1024x768"
-#define CONFIG_BOOTCOMMAND   "fatload mmc 0:1 0x81000000 uImage;bootm 0x81000000"
+#define CONFIG_BOOTCOMMAND   "mmc rescan; fatload mmc 0:1 0x81000000 uImage;bootm 0x81000000"
 
 
 #define CONFIG_EXTRA_ENV_SETTINGS			\
